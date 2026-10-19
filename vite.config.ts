@@ -4,6 +4,7 @@ import { fileURLToPath, URL } from 'node:url';
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: '/CAAAT/', // هذا السطر هو اللي يخليه يشتغل على 【entity-GitHub¦canonical_name=GitHub】 Pages
   plugins: [react()],
   resolve: {
     alias: {
