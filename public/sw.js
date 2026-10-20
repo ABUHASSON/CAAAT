@@ -1,5 +1,12 @@
-const CACHE = "attendance-v2";
-const ASSETS = ["/", "/index.html", "/manifest.webmanifest", "/icon.svg"];
+const CACHE = "attendance-v4";
+const ASSETS = [
+  "/CAAAT/",
+  "/CAAAT/index.html",
+  "/CAAAT/manifest.webmanifest",
+  "/CAAAT/icon-192.png",
+  "/CAAAT/icon-512.png",
+  "/CAAAT/icon.svg"
+];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(
