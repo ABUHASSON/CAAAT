@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "io.github.abuhasson.twa",
+      "sha256_cert_fingerprints": [
+        "33:CF:69:96:2D:90:91:C9:2A:C9:A7:7E:E9:2C:87:11:4A:44:8A:0A:A2:43:7D:11:29:F3:61:C2:73:0A:06:87"
+      ]
+    }
+  }
+]
