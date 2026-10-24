@@ -13,31 +13,32 @@ export function buildOfficialPdfHtml(section: Section, teacherName: string = "")
   const total = section.totalLectures ?? section.lectures.length;
   const completed = section.lectures.length;
   
-  // حساب الغيابات لكل طالب
-  const rows = section.students
+  // حساب الغيابات لكل طالب - فقط من لديه 3 غيابات فأكثر
+  const allRows = section.students
     .slice()
     .sort((a,b)=>a.order-b.order)
-    .map((s, idx) => {
+    .map((s) => {
       let abs = 0;
       for (const lec of section.lectures) {
         if (lec.attendance[s.id] === "absent") abs++;
       }
-      let status = "مستمر";
-      if (abs === 0) status = "مستمر";
-      else if (abs === 1 || abs === 2) status = "إنذار";
-      else if (abs >= 3) status = "متجاوز";
-      return { idx: idx+1, name: s.name, abs, status };
-    });
+      let status = "متجاوز";
+      if (abs >= 3 && abs < 5) status = "إنذار";
+      else if (abs >= 5) status = "متجاوز نهائي";
+      return { name: s.name, abs, status };
+    }).filter(r => r.abs >= 3); // فقط 3 فأكثر
 
-  const infoLine = `المادة: ${section.subject} | المرحلة: ${section.stage} - ${section.studyType === "morning" ? "صباحي" : "مسائي"} | عدد المحاضرات: ${completed} / ${total} | التاريخ: ${dateStr}`;
+  const rows = allRows.map((r, i) => ({ idx: i+1, ...r }));
 
-  const tableRows = rows.map(r => `
+  const infoLine = `المادة: ${section.subject} | المرحلة: ${section.stage} - ${section.studyType === "morning" ? "صباحي" : "مسائي"} | عدد المحاضرات: ${completed} / ${total} | الطلبة المتجاوزون 3 غيابات فأكثر | التاريخ: ${dateStr}`;
+
+  const tableRows = rows.length > 0 ? rows.map(r => `
       <tr>
         <td>${r.idx}</td>
         <td class="name">${r.name}</td>
         <td>${r.abs}</td>
         <td>${r.status}</td>
-      </tr>`).join("");
+      </tr>`).join("") : `<tr><td colspan="4" style="padding:20px; text-align:center; color:#666">لا يوجد طلبة متجاوزين 3 غيابات فأكثر</td></tr>`;
 
   // 6 سم فراغ علوي + جدول مبسط + توقيع وسط-يسار بدون نقاط
   return `<!DOCTYPE html>
@@ -88,7 +89,7 @@ export function buildOfficialPdfHtml(section: Section, teacherName: string = "")
 }
 
 export function openOfficialPdf(section: Section) {
-  const teacher = window.prompt("اسم مدرس المادة:", "د. جليل غضبان شكر") ?? "";
+  const teacher = window.prompt("اسم مدرس المادة:", "") ?? "";
   const html = buildOfficialPdfHtml(section, teacher);
   const w = window.open("", "_blank");
   if (!w) {
