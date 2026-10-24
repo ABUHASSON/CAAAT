@@ -14,6 +14,7 @@ import {
   Trash2,
   UserPlus,
   XCircle,
+  FileText,
   Clock,
   AlertTriangle,
   Edit3,
@@ -29,6 +30,7 @@ import type {
 import { normalizeArabic } from "@/lib/normalize";
 import { getSection, saveSection } from "@/lib/db";
 import { exportSectionReport } from "@/lib/excel";
+import { openOfficialPdf } from "@/lib/pdf";
 import { buildLectureReportText, shareText, copyText } from "@/lib/share";
 import { useTheme } from "@/lib/theme";
 
@@ -447,6 +449,14 @@ export default function ClassroomScreen({ sectionId, onBack }: Props) {
             >
               <Download className="h-4 w-4" />
             </button>
+            <button
+              onClick={() => openOfficialPdf(section)}
+              className="grid h-9 w-9 place-items-center rounded-xl bg-white text-primary-800 active:scale-95"
+              aria-label="تصدير PDF رسمي"
+              title="PDF رسمي"
+            >
+              <FileText className="h-4 w-4" />
+            </button>
           </div>
 
           {/* Stats */}
@@ -793,16 +803,9 @@ function StudentRow({
 
   return (
     <li className="flex items-center gap-1.5 rounded-2xl bg-white dark:bg-slate-800 p-2.5 shadow-sm animate-fade-in">
-      {/* Order badge - أحمر مع نسبة صغيرة */}
-      <div className="relative shrink-0">
-        <div className={`grid h-6 w-6 place-items-center rounded-full text-[10px] font-bold transition ${warned ? "bg-red-500 text-white shadow-sm" : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"}`}>
-          {student.order + 1}
-        </div>
-        {warned && (
-          <span className="absolute -top-2 -right-2 flex min-w-[18px] h-[14px] items-center justify-center rounded-full bg-red-600 px-1 text-[8px] font-extrabold text-white ring-2 ring-white dark:ring-slate-800">
-            {Math.round(absencePct)}%
-          </span>
-        )}
+      {/* Order badge */}
+      <div className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-slate-100 dark:bg-slate-700 text-[10px] font-bold text-slate-500 dark:text-slate-400">
+        {student.order + 1}
       </div>
 
       {/* Participation */}
@@ -840,7 +843,7 @@ function StudentRow({
         </button>
       </div>
 
-            {/* Name - سطر واحد، النسبة تظهر كأيقونة فوق رقم التسلسل فقط */}
+      {/* Name + warning - with long press */}
       <div
         className="min-w-0 flex-1 px-1 select-none touch-manipulation"
         onTouchStart={startLongPress}
@@ -848,18 +851,28 @@ function StudentRow({
         onTouchMove={cancelLongPress}
         onContextMenu={(e) => e.preventDefault()}
       >
-        <p className="truncate text-sm font-bold text-slate-800 dark:text-slate-100" dir="auto" title={warned ? `تجاوز نسبة الغياب ${Math.round(absencePct)}%` : undefined}>
-          {student.name}
-        </p>
-        {(maxed && !locked) || locked ? (
-          <p className="truncate text-[10px] font-semibold leading-none mt-0.5">
-            {maxed && !locked ? (
-              <span className="text-emerald-600 dark:text-emerald-400">اكتملت المشاركة</span>
-            ) : locked ? (
-              <span className="text-slate-400 dark:text-slate-500">المشاركة موقوفة</span>
-            ) : null}
+        <div className="flex items-center gap-1.5">
+          <p className="truncate text-sm font-bold text-slate-800 dark:text-slate-100" dir="auto">
+            {student.name}
           </p>
-        ) : null}
+          {warned && (
+            <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-red-100 dark:bg-red-900/40 px-1.5 py-0.5 text-[9px] font-bold text-red-700 dark:text-red-400">
+              <AlertTriangle className="h-2.5 w-2.5" />
+              إنذار {absencePct}%
+            </span>
+          )}
+        </div>
+        {maxed && !locked && (
+          <p className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+            اكتملت المشاركة
+          </p>
+        )}
+        {locked && (
+          <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500">
+            المشاركة موقوفة
+          </p>
+        )}
+        <p className="text-[9px] text-slate-400 dark:text-slate-500 hidden sm:block">اضغط مطولاً للتعديل والتحريك</p>
       </div>
 
       {/* Delete student */}
