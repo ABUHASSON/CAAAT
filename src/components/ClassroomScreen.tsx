@@ -15,6 +15,7 @@ import {
   UserPlus,
   XCircle,
   FileText,
+  MoreVertical,
   Clock,
   AlertTriangle,
   Edit3,
@@ -111,6 +112,7 @@ export default function ClassroomScreen({ sectionId, onBack }: Props) {
   const [showMoveStudentModal, setShowMoveStudentModal] = useState(false);
   const [editNameValue, setEditNameValue] = useState("");
   const [moveToPosition, setMoveToPosition] = useState("");
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
   const toastTimer = useRef<number | null>(null);
   const savedFlashTimer = useRef<number | null>(null);
 
@@ -395,89 +397,82 @@ export default function ClassroomScreen({ sectionId, onBack }: Props) {
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-900 pb-6">
-      {/* Top bar */}
+      {/* Top bar - مضغوط ومحسن */}
       <header className="safe-top sticky top-0 z-30 bg-gradient-to-b from-primary-800 to-primary-700 text-white shadow-md">
-        <div className="mx-auto max-w-2xl px-3 pt-3 pb-3">
-          <div className="flex items-center gap-2">
+        <div className="mx-auto max-w-2xl px-2.5 pt-2.5 pb-2.5">
+          <div className="flex items-center gap-1.5">
             <button
               onClick={onBack}
-              className="grid h-9 w-9 place-items-center rounded-xl bg-white/15 active:scale-95"
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white/15 active:scale-95"
               aria-label="رجوع"
             >
-              <ArrowRight className="h-5 w-5" />
+              <ArrowRight className="h-4 w-4" />
             </button>
+            {/* اسم المادة - المرحلة في الوسط - المنطقة الصفراء */}
             <div className="min-w-0 flex-1">
-              <h1 className="truncate text-base font-bold leading-tight">
-                {section.subject}
+              <h1 className="truncate text-[14px] font-bold leading-tight">
+                {section.subject} - {section.stage}
               </h1>
-              <p className="truncate text-[11px] text-primary-100">
-                {section.stage} ·{" "}
-                {section.studyType === "morning" ? "صباحي" : "مسائي"}
+              <p className="truncate text-[10px] text-primary-100 leading-none mt-0.5">
+                {section.studyType === "morning" ? "صباحي" : "مسائي"} · {section.lectures.length} محاضرة
               </p>
             </div>
-            <button
-              onClick={toggleTheme}
-              className="grid h-9 w-9 place-items-center rounded-xl bg-white/15 active:scale-95 transition"
-              aria-label="تبديل الوضع الليلي"
-            >
-              {theme === "dark" ? (
-                <Sun className="h-4 w-4" />
-              ) : (
-                <Moon className="h-4 w-4" />
-              )}
-            </button>
-            <button
-              onClick={handleShareReport}
-              className="flex items-center gap-1 rounded-xl bg-white/15 px-2.5 py-2 text-xs font-bold active:scale-95"
-              aria-label="مشاركة التقرير"
-            >
-              <Share2 className="h-4 w-4" />
-              مشاركة
-            </button>
-            <button
-              onClick={handleCopyReport}
-              className="flex items-center gap-1 rounded-xl bg-white/15 px-2.5 py-2 text-xs font-bold active:scale-95"
-              aria-label="نسخ التقرير"
-            >
-              <Copy className="h-4 w-4" />
-              نسخ
-            </button>
-            <button
-              onClick={() => exportSectionReport(section)}
-              className="grid h-9 w-9 place-items-center rounded-xl bg-white/15 active:scale-95"
-              aria-label="تصدير Excel"
-            >
-              <Download className="h-4 w-4" />
-            </button>
+            {/* زر PDF الرسمي - أبيض بارز */}
             <button
               onClick={() => openOfficialPdf(section)}
-              className="grid h-9 w-9 place-items-center rounded-xl bg-white text-primary-800 active:scale-95"
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white text-primary-800 active:scale-95 shadow-sm"
               aria-label="تصدير PDF رسمي"
-              title="PDF رسمي"
+              title="PDF رسمي - 3+ غياب"
             >
               <FileText className="h-4 w-4" />
             </button>
+            {/* قائمة المزيد - تحتوي الباقي لتخفيف الزحام */}
+            <div className="relative">
+              <button
+                onClick={() => setShowMoreMenu(!showMoreMenu)}
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white/15 active:scale-95"
+                aria-label="المزيد"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </button>
+              {showMoreMenu && (
+                <div className="absolute left-0 top-10 z-50 w-48 rounded-2xl bg-white dark:bg-slate-800 shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden animate-fade-in">
+                  <button onClick={() => { setShowMoreMenu(false); handleShareReport(); }} className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 text-right">
+                    <Share2 className="h-3.5 w-3.5" /> مشاركة التقرير
+                  </button>
+                  <button onClick={() => { setShowMoreMenu(false); handleCopyReport(); }} className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 text-right">
+                    <Copy className="h-3.5 w-3.5" /> نسخ التقرير
+                  </button>
+                  <button onClick={() => { setShowMoreMenu(false); exportSectionReport(section); }} className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 text-right">
+                    <Download className="h-3.5 w-3.5" /> تصدير Excel
+                  </button>
+                  <div className="h-px bg-slate-100 dark:bg-slate-700"></div>
+                  <button onClick={() => { setShowMoreMenu(false); toggleTheme(); }} className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 text-right">
+                    {theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />} {theme === "dark" ? "وضع نهاري" : "وضع ليلي"}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Stats */}
-          <div className="mt-3 grid grid-cols-4 gap-2">
+          {/* Stats - مضغوط */}
+          <div className="mt-2.5 grid grid-cols-4 gap-1.5">
             <Stat label="الإجمالي" value={section.students.length} tone="neutral" />
             <Stat label="حاضر" value={presentCount} tone="present" />
             <Stat label="غائب" value={absentCount} tone="absent" />
             <Stat label="إجازة" value={leaveCount} tone="leave" />
           </div>
 
-          {/* Date selector */}
-          <div className="mt-3 flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2">
-            <CalendarDays className="h-4 w-4 text-primary-100" />
-            <span className="text-xs text-primary-100">تاريخ المحاضرة:</span>
+          {/* Date selector - مضغوط */}
+          <div className="mt-2 flex items-center gap-2 rounded-lg bg-white/10 px-2.5 py-1.5">
+            <CalendarDays className="h-3.5 w-3.5 text-primary-100 shrink-0" />
             <input
               type="date"
               value={lectureDate}
               onChange={(e) => setLectureDate(e.target.value)}
-              className="flex-1 bg-transparent text-sm font-bold text-white outline-none [color-scheme:dark]"
+              className="flex-1 bg-transparent text-xs font-bold text-white outline-none [color-scheme:dark] min-w-0"
             />
-            <span className="hidden sm:inline text-[11px] text-primary-100">
+            <span className="hidden sm:inline text-[10px] text-primary-100 truncate">
               {formatDateAR(lectureDate)}
             </span>
           </div>
@@ -803,9 +798,16 @@ function StudentRow({
 
   return (
     <li className="flex items-center gap-1.5 rounded-2xl bg-white dark:bg-slate-800 p-2.5 shadow-sm animate-fade-in">
-      {/* Order badge */}
-      <div className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-slate-100 dark:bg-slate-700 text-[10px] font-bold text-slate-500 dark:text-slate-400">
-        {student.order + 1}
+      {/* Order badge - أحمر مع نسبة صغيرة */}
+      <div className="relative shrink-0">
+        <div className={`grid h-6 w-6 place-items-center rounded-full text-[10px] font-bold transition ${warned ? "bg-red-500 text-white shadow-sm" : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"}`}>
+          {student.order + 1}
+        </div>
+        {warned && (
+          <span className="absolute -top-2 -right-2 flex min-w-[18px] h-[14px] items-center justify-center rounded-full bg-red-600 px-1 text-[8px] font-extrabold text-white ring-2 ring-white dark:ring-slate-800">
+            {Math.round(absencePct)}%
+          </span>
+        )}
       </div>
 
       {/* Participation */}
@@ -843,7 +845,7 @@ function StudentRow({
         </button>
       </div>
 
-      {/* Name + warning - with long press */}
+            {/* Name - سطر واحد، النسبة تظهر كأيقونة فوق رقم التسلسل فقط */}
       <div
         className="min-w-0 flex-1 px-1 select-none touch-manipulation"
         onTouchStart={startLongPress}
@@ -851,28 +853,18 @@ function StudentRow({
         onTouchMove={cancelLongPress}
         onContextMenu={(e) => e.preventDefault()}
       >
-        <div className="flex items-center gap-1.5">
-          <p className="truncate text-sm font-bold text-slate-800 dark:text-slate-100" dir="auto">
-            {student.name}
+        <p className="truncate text-sm font-bold text-slate-800 dark:text-slate-100" dir="auto" title={warned ? `تجاوز نسبة الغياب ${Math.round(absencePct)}%` : undefined}>
+          {student.name}
+        </p>
+        {(maxed && !locked) || locked ? (
+          <p className="truncate text-[10px] font-semibold leading-none mt-0.5">
+            {maxed && !locked ? (
+              <span className="text-emerald-600 dark:text-emerald-400">اكتملت المشاركة</span>
+            ) : locked ? (
+              <span className="text-slate-400 dark:text-slate-500">المشاركة موقوفة</span>
+            ) : null}
           </p>
-          {warned && (
-            <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-red-100 dark:bg-red-900/40 px-1.5 py-0.5 text-[9px] font-bold text-red-700 dark:text-red-400">
-              <AlertTriangle className="h-2.5 w-2.5" />
-              إنذار {absencePct}%
-            </span>
-          )}
-        </div>
-        {maxed && !locked && (
-          <p className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-            اكتملت المشاركة
-          </p>
-        )}
-        {locked && (
-          <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500">
-            المشاركة موقوفة
-          </p>
-        )}
-        <p className="text-[9px] text-slate-400 dark:text-slate-500 hidden sm:block">اضغط مطولاً للتعديل والتحريك</p>
+        ) : null}
       </div>
 
       {/* Delete student */}
