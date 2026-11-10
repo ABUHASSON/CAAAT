@@ -43,32 +43,79 @@ export function openOfficialPdf(section: Section) {
   w.document.open(); w.document.write(html); w.document.close();
 }
 
-// ===== NEW: مصفوفة الغياب التفصيلية مثل الصورة =====
-export function buildMatrixPdfHtml(section: Section, teacherName: string = ""): string {
-  const dateStr = todayAR();
+
+// ===== مصفوفة الغياب - تصدير كصورة PNG واحدة (بدون طباعة) =====
+export function buildMatrixElement(section: Section, teacherName: string = ""): HTMLDivElement {
   const sortedLectures = [...section.lectures].sort((a,b)=>a.date.localeCompare(b.date));
   const dates = sortedLectures.map(l => l.date);
-  // ترويسة مثل الصورة: المادة - المرحلة / صباحي / الكورس
   const headerTitle = `${section.subject} - ${section.stage} / ${section.studyType === "morning" ? "صباحي" : "مسائي"} / الكورس ${section.semester === "2" ? "الثاني" : "الأول"}`;
-  const headerRow = `<tr><th style="width:32px">ت</th><th style="text-align:center; min-width:160px">اسم الطالب</th>${dates.map(d=>`<th style="font-size:10px; padding:5px 2px">${fmtDateShort(d)}</th>`).join("")}</tr>`;
+  const fmt = (iso: string) => {
+    try { const d = new Date(iso + "T00:00:00"); return `${d.getDate()}-${d.toLocaleDateString("en-GB", { month: "short" })}`; } catch { return iso; }
+  };
+  const div = document.createElement("div");
+  div.style.cssText = "width:900px; background:white; font-family:'Segoe UI',Tahoma,sans-serif; color:#111; padding:0; direction:rtl;";
+  const headerRow = `<tr><th style="width:36px;background:#0f766e;color:white;padding:8px 2px;font-size:13px;border:1px solid #0f766e">ت</th><th style="background:#0f766e;color:white;padding:8px;text-align:center;font-size:14px;border:1px solid #0f766e;min-width:220px">اسم الطالب</th>${dates.map(d=>`<th style="background:#0f766e;color:white;padding:8px 2px;font-size:12px;border:1px solid #0f766e">${fmt(d)}</th>`).join("")}</tr>`;
   const bodyRows = section.students.slice().sort((a,b)=>a.order-b.order).map((s, idx) => {
     const cells = dates.map(d => {
       const lec = sortedLectures.find(l=>l.date===d);
       const st = lec?.attendance[s.id] ?? "present";
-      if (st === "absent") return `<td style="color:#dc2626; font-weight:900; font-size:13px">✕</td>`;
-      if (st === "leave") return `<td style="color:#d97706; font-weight:700">إ</td>`;
-      return `<td style="color:#059669; font-weight:900; font-size:13px">✓</td>`;
+      if (st === "absent") return `<td style="color:#dc2626;font-weight:900;font-size:15px;border:1px solid #cbd5e1;padding:6px 2px;text-align:center">✕</td>`;
+      if (st === "leave") return `<td style="color:#d97706;font-weight:700;font-size:13px;border:1px solid #cbd5e1;padding:6px 2px;text-align:center">إ</td>`;
+      return `<td style="color:#059669;font-weight:900;font-size:15px;border:1px solid #cbd5e1;padding:6px 2px;text-align:center">✓</td>`;
     }).join("");
-    const bg = idx % 2 === 0 ? "background:#a5f3fc" : "background:white";
-    return `<tr style="${bg}"><td style="font-weight:bold">${idx+1}</td><td class="name">${s.name}</td>${cells}</tr>`;
+    const bg = idx % 2 === 0 ? "#a5f3fc" : "#ffffff";
+    return `<tr style="background:${bg}"><td style="font-weight:bold;border:1px solid #cbd5e1;padding:6px 2px;text-align:center;font-size:13px">${idx+1}</td><td style="border:1px solid #cbd5e1;padding:6px 8px;text-align:right;font-size:13px">${s.name}</td>${cells}</tr>`;
   }).join("");
-  return `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>مصفوفة الغياب - ${section.subject}</title><style>@page{size:A4 landscape;margin:1cm} *{box-sizing:border-box} body{font-family:'Segoe UI',Tahoma,sans-serif;background:white;margin:0;padding:0;color:#111} .paper{width:100%;max-width:297mm;margin:0 auto;padding:0 10mm 10mm 10mm} .top-space{height:6cm;width:100%} .title-bar{background:#0f766e;color:white;text-align:center;padding:8px 10px;font-size:16px;font-weight:bold;border-radius:4px 4px 0 0} .info{text-align:center;font-size:11px;color:#333;margin:8px 0;background:#f8fafc;padding:6px;border:1px solid #e2e8f0;border-radius:6px} table{width:100%;border-collapse:collapse;font-size:11px} th{background:#0f766e;color:white;padding:6px 2px;font-size:11px;border:1px solid #0f766e} td{padding:5px 2px;border:1px solid #cbd5e1;text-align:center;font-size:11px} td.name{text-align:right;padding-right:8px;font-size:11px} .legend{margin-top:10px;font-size:11px;text-align:center;color:#444} .footer-left{margin-top:60px;text-align:right;direction:rtl;font-size:13px;line-height:2.4;width:fit-content;margin-left:auto;margin-right:auto;transform:translateX(-40px)} @media print{body{background:white}}</style></head><body><div class="paper"><div class="top-space"></div><div class="title-bar">${headerTitle}</div><div class="info">عدد المحاضرات: ${dates.length} | التاريخ: ${dateStr} | ✓ حاضر &nbsp; ✕ غائب &nbsp; إ إجازة</div><table><thead>${headerRow}</thead><tbody>${bodyRows}</tbody></table><div class="legend">مصفوفة الغياب الكاملة للمادة - كل عمود يمثل محاضرة واحدة</div><div class="footer-left"><div>التوقيع :</div><div>مدرس المادة : ${teacherName}</div><div>التاريخ :</div></div></div><script>window.onload=function(){setTimeout(function(){window.print()},300)}</script></body></html>`;
+  const dateStr = new Date().toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric" });
+  div.innerHTML = `
+    <div style="background:#0f766e;color:white;text-align:center;padding:12px 10px;font-size:18px;font-weight:bold">${headerTitle}</div>
+    <div style="text-align:center;font-size:12px;color:#333;padding:8px;background:#f8fafc;border:1px solid #e2e8f0">عدد المحاضرات: ${dates.length} | التاريخ: ${dateStr} | ✓ حاضر &nbsp; ✕ غائب &nbsp; إ إجازة</div>
+    <table style="width:100%;border-collapse:collapse"><thead>${headerRow}</thead><tbody>${bodyRows}</tbody></table>
+    <div style="text-align:center;font-size:11px;color:#444;margin-top:10px">مصفوفة الغياب الكاملة للمادة - كل عمود يمثل محاضرة واحدة</div>
+    <div style="margin-top:30px;text-align:center;font-size:13px;line-height:2.2"><div>التوقيع : </div><div>مدرس المادة : ${teacherName}</div><div>التاريخ : </div></div>
+  `;
+  return div;
 }
 
-export function openMatrixPdf(section: Section) {
+export async function exportMatrixAsImage(section: Section) {
   const teacher = window.prompt("اسم مدرس المادة:", "") ?? "";
-  const html = buildMatrixPdfHtml(section, teacher);
-  const w = window.open("", "_blank");
-  if (!w) { alert("يرجى السماح بالنوافذ المنبثقة"); return; }
-  w.document.open(); w.document.write(html); w.document.close();
+  // عنصر مؤقت خارج الشاشة
+  const el = buildMatrixElement(section, teacher);
+  el.style.position = "fixed";
+  el.style.left = "-9999px";
+  el.style.top = "0";
+  document.body.appendChild(el);
+  try {
+    // @ts-ignore - يتم تحميلها ديناميكياً
+    const html2canvas = (await import("html2canvas")).default;
+    const canvas = await html2canvas(el, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
+    const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, "image/png", 1));
+    if (!blob) throw new Error("فشل إنشاء الصورة");
+    const fileName = `غياب-${section.subject}-${section.stage}.png`;
+    const file = new File([blob], fileName, { type: "image/png" });
+    // مشاركة مباشرة على الموبايل (واتساب - تليجرام - حفظ)
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], title: fileName }); return; } catch {}
+    }
+    // بديل: تحميل الصورة
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = fileName; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    // عرض الصورة في نافذة جديدة للمعاينة والحفظ اليدوي
+    const w = window.open("", "_blank");
+    if (w) { w.document.write(`<img src="${url}" style="width:100%">`); }
+  } catch (e) {
+    alert("حدث خطأ أثناء تصدير الصورة. تأكد من تثبيت html2canvas: npm install html2canvas");
+    console.error(e);
+  } finally {
+    el.remove();
+  }
 }
+
+// اسم قديم للتوافق - الآن يصدّر كصورة
+export const openMatrixPdf = exportMatrixAsImage;
+export const buildMatrixPdfHtml = (section: Section, teacherName: string = "") => {
+  const el = buildMatrixElement(section, teacherName);
+  return el.outerHTML;
+};
